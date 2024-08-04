@@ -13,8 +13,9 @@ import CIcon from '@coreui/icons-react'
 
 import { AppSidebarNav } from './AppSidebarNav'
 
-import { logo } from 'src/assets/brand/logo'
+import logoHostKita from 'src/assets/brand/logo_host_kita_white.png'
 import { sygnet } from 'src/assets/brand/sygnet'
+
 
 // sidebar nav config
 import navigation from '../_nav'
@@ -23,6 +24,8 @@ const AppSidebar = () => {
   const dispatch = useDispatch()
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
+
+  
 
   return (
     <CSidebar
@@ -36,9 +39,9 @@ const AppSidebar = () => {
       }}
     >
       <CSidebarHeader className="border-bottom">
-        <CSidebarBrand to="/">
-          <CIcon customClassName="sidebar-brand-full" icon={logo} height={32} />
-          <CIcon customClassName="sidebar-brand-narrow" icon={sygnet} height={32} />
+        <CSidebarBrand to="/" >
+        <img src={logoHostKita} alt="Host Kita Logo" className="sidebar-brand-full" height={35} width={200} />
+          
         </CSidebarBrand>
         <CCloseButton
           className="d-lg-none"

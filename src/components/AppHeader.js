@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import axios from 'axios'
 import { NavLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -31,6 +32,7 @@ import { AppHeaderDropdown } from './header/index'
 const AppHeader = () => {
   const headerRef = useRef()
   const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
+  const [namaAdmin, setNamaAdmin] = useState('')
 
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
@@ -40,6 +42,22 @@ const AppHeader = () => {
       headerRef.current &&
         headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0)
     })
+
+    // Fetch nama Admin from API using Axios
+    const token = localStorage.getItem('token') // Ambil token dari local storage
+    axios.get('http://192.168.1.3:5000/api/admin/nameAdmin', { // Ganti dengan endpoint API yang sesuai
+      headers: {
+        Authorization: `Bearer ${token}`, // Tambahkan token ke header
+      },
+    })
+      .then((response) => {
+        if (response.data.status) {
+          setNamaAdmin(response.data.nama_admin)
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching nama admin:', error)
+      })
   }, [])
 
   return (
@@ -51,35 +69,9 @@ const AppHeader = () => {
         >
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
-        <CHeaderNav className="d-none d-md-flex">
-          <CNavItem>
-            <CNavLink to="/dashboard" as={NavLink}>
-              Dashboard
-            </CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink href="#">Users</CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink href="#">Settings</CNavLink>
-          </CNavItem>
-        </CHeaderNav>
+        
         <CHeaderNav className="ms-auto">
-          <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilBell} size="lg" />
-            </CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilList} size="lg" />
-            </CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilEnvelopeOpen} size="lg" />
-            </CNavLink>
-          </CNavItem>
+          Selamat Datang, {namaAdmin}
         </CHeaderNav>
         <CHeaderNav>
           <li className="nav-item py-1">

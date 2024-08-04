@@ -29,8 +29,8 @@ const avatars = [
   'src/assets/images/avatars/Asset_21.svg',
 ];
 
-const Dashboard = () => {
-  const [orders, setOrders] = useState([]);
+const Rekening = () => {
+  const [rekening, setRekening] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [modal, setModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -38,17 +38,17 @@ const Dashboard = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://192.168.1.3:5000/api/user/allOrder', {
+      const response = await axios.get('http://192.168.1.3:5000/api/user/getAllRekening', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       if (response.data.status) {
-        setOrders(response.data.orderUser);
+        setRekening(response.data.rekening);
         setHasMore(false); // Karena kita mengambil semua data sekaligus
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error('Error fetching rekening:', error);
     }
   };
 
@@ -94,7 +94,7 @@ const Dashboard = () => {
       <CRow>
         <CCol xs>
           <CCard className="mb-4">
-            <CCardHeader>Data User Order Live</CCardHeader>
+            <CCardHeader>Data User Rekening</CCardHeader>
             <CCardBody>
               <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead className="text-nowrap">
@@ -102,38 +102,28 @@ const Dashboard = () => {
                     <CTableHeaderCell className="bg-body-tertiary text-center">
                       <CIcon icon={cilPeople} />
                     </CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Order Id</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary text-center">Rekening Id</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">UMKM</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Email</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Produk</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Jumlah Produk</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Tanggal Live</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Total Pembayaran</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Bukti Pembayaran</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Status Pembayaran</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Cek Payment</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary text-center">Nomor Rekening</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary text-center">Nama Bank</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary text-center">Atas Nama</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary text-center">Nomor Telepon</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {orders.map((order, index) => (
+                  {rekening.map((rekeningUser, index) => (
                     <CTableRow key={index}>
                       <CTableDataCell className="text-center">
                         <CAvatar size="md" src={getRandomAvatar()} />
                       </CTableDataCell>
-                      <CTableDataCell className="text-center">{order.orderId}</CTableDataCell>
-                      <CTableDataCell className="text-center">{order.nama_umkm}</CTableDataCell>
-                      <CTableDataCell className="text-center">{order.email}</CTableDataCell>
-                      <CTableDataCell className="text-center">{order.namaProduk}</CTableDataCell>
-                      <CTableDataCell className="text-center">{order.jumlahProduk} pcs</CTableDataCell>
-                      <CTableDataCell className="text-center">{new Date(order.tanggalLive).toLocaleDateString()}</CTableDataCell>
-                      <CTableDataCell className="text-center">{order.totalPayment}</CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        <CAvatar size="md" src={order.buktiTransfer} />
-                      </CTableDataCell>
-                      <CTableDataCell className="text-center">{order.statusPayment}</CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        <CButton color="primary" onClick={() => openModal(order.orderId)}>Cek Bukti</CButton>
-                      </CTableDataCell>
+                      <CTableDataCell className="text-center">{rekeningUser.rekeningId}</CTableDataCell>
+                      <CTableDataCell className="text-center">{rekeningUser.nama_umkm}</CTableDataCell>
+                      <CTableDataCell className="text-center">{rekeningUser.email}</CTableDataCell>
+                      <CTableDataCell className="text-center">{rekeningUser.noRekening}</CTableDataCell>
+                      <CTableDataCell className="text-center">{rekeningUser.namaBank}</CTableDataCell>
+                      <CTableDataCell className="text-center">{rekeningUser.atasNama}</CTableDataCell>
+                      <CTableDataCell className="text-center">{rekeningUser.noTelepon}</CTableDataCell>
                     </CTableRow>
                   ))}
                 </CTableBody>
@@ -162,5 +152,5 @@ const Dashboard = () => {
   );
 }
 
-export default Dashboard;
+export default Rekening;
 

@@ -1,6 +1,15 @@
 import React from 'react'
+import PaymentToCustomer from './views/dashboard/PaymentToCostumer'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
+const Rekening = React.lazy(() => import('./views/dashboard/Rekening'))
+const PaymentToCostumer = React.lazy(() => import('./views/dashboard/PaymentToCostumer'))
+const DataPembayaran = React.lazy(() => import('./views/dashboard/DataPembayaran'))
+const InputJadwal = React.lazy(() => import('./views/dashboard/InputJadwal'))
+const JadwalHostLive = React.lazy(() => import('./views/dashboard/JadwalHostLive'))
+const InputPenjualan = React.lazy(() => import('./views/dashboard/InputPenjualan'))
+const Penjualan = React.lazy(() => import('./views/dashboard/Penjualan'))
+
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
 
@@ -54,6 +63,13 @@ const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
+  { path: '/rekening', name: 'Rekening', element: Rekening },
+  { path: '/payment-to-customer', name: 'Payment To Customer', element: PaymentToCostumer },
+  { path: '/data-pembayaran', name: 'Data Pembayaran', element: DataPembayaran },
+  { path: '/input-jadwal', name: 'Input Jadwal', element: InputJadwal },
+  { path: '/jadwal-host-live', name: 'Jadwal Host Live', element: JadwalHostLive },
+  { path: '/input-penjualan', name: 'Input Penjualan', element: InputPenjualan },
+  { path: '/penjualan', name: 'Penjualan', element: Penjualan },
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
   { path: '/theme/typography', name: 'Typography', element: Typography },
