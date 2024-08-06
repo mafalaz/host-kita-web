@@ -99,31 +99,31 @@ const Rekening = () => {
               <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead className="text-nowrap">
                   <CTableRow>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">
+                    {/* <CTableHeaderCell className="bg-body-tertiary text-center">
                       <CIcon icon={cilPeople} />
-                    </CTableHeaderCell>
+                    </CTableHeaderCell> */}
                     <CTableHeaderCell className="bg-body-tertiary text-center">Rekening Id</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">UMKM</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Email</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Nomor Rekening</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Nama Bank</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Atas Nama</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Nomor Telepon</CTableHeaderCell>
+                    
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
                   {rekening.map((rekeningUser, index) => (
                     <CTableRow key={index}>
-                      <CTableDataCell className="text-center">
+                      {/* <CTableDataCell className="text-center">
                         <CAvatar size="md" src={getRandomAvatar()} />
-                      </CTableDataCell>
+                      </CTableDataCell> */}
                       <CTableDataCell className="text-center">{rekeningUser.rekeningId}</CTableDataCell>
                       <CTableDataCell className="text-center">{rekeningUser.nama_umkm}</CTableDataCell>
                       <CTableDataCell className="text-center">{rekeningUser.email}</CTableDataCell>
                       <CTableDataCell className="text-center">{rekeningUser.noRekening}</CTableDataCell>
                       <CTableDataCell className="text-center">{rekeningUser.namaBank}</CTableDataCell>
                       <CTableDataCell className="text-center">{rekeningUser.atasNama}</CTableDataCell>
-                      <CTableDataCell className="text-center">{rekeningUser.noTelepon}</CTableDataCell>
+                      
                     </CTableRow>
                   ))}
                 </CTableBody>

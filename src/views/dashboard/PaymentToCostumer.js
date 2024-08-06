@@ -1,65 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import InfiniteScroll from 'react-infinite-scroll-component';
-import { CInputGroup, CInputGroupText, CFormInput, CFormLabel, CButton, CRow, CCol, CCard, CCardHeader, CCardBody, CFormSelect } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilPeople } from '@coreui/icons';
-
-const avatars = [
-  'src/assets/images/avatars/Asset_1.svg',
-  'src/assets/images/avatars/Asset_2.svg',
-  'src/assets/images/avatars/Asset_3.svg',
-  'src/assets/images/avatars/Asset_4.svg',
-  'src/assets/images/avatars/Asset_5.svg',
-  'src/assets/images/avatars/Asset_6.svg',
-  'src/assets/images/avatars/Asset_7.svg',
-  'src/assets/images/avatars/Asset_8.svg',
-  'src/assets/images/avatars/Asset_9.svg',
-  'src/assets/images/avatars/Asset_10.svg',
-  'src/assets/images/avatars/Asset_11.svg',
-  'src/assets/images/avatars/Asset_12.svg',
-  'src/assets/images/avatars/Asset_13.svg',
-  'src/assets/images/avatars/Asset_14.svg',
-  'src/assets/images/avatars/Asset_15.svg',
-  'src/assets/images/avatars/Asset_16.svg',
-  'src/assets/images/avatars/Asset_17.svg',
-  'src/assets/images/avatars/Asset_18.svg',
-  'src/assets/images/avatars/Asset_19.svg',
-  'src/assets/images/avatars/Asset_20.svg',
-  'src/assets/images/avatars/Asset_21.svg',
-];
+import {
+  CInputGroup,
+  CInputGroupText,
+  CFormInput,
+  CFormLabel,
+  CButton,
+  CRow,
+  CCol,
+  CCard,
+  CCardHeader,
+  CCardBody,
+  CFormSelect,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter
+} from '@coreui/react';
 
 const PaymentToCustomer = () => {
-  const [rekening, setRekening] = useState([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [modal, setModal] = useState(false);
+  const [orders, setOrders] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
-  const [value, setValue] = useState('');
-
-  const formatNumber = (num) => {
-    return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  };
-
-  const handleInputChange = (e) => {
-    const rawValue = e.target.value.replace(/\D/g, '');
-    const formattedValue = formatNumber(rawValue);
-    setValue(formattedValue);
-  };
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [totalPembayaran, setTotalPembayaran] = useState('');
+  const [buktiPembayaran, setBuktiPembayaran] = useState(null); // Updated to null
+  const [tanggalPembayaran, setTanggalPembayaran] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://192.168.1.3:5000/api/user/getAllRekening', {
+      const response = await axios.get('http://localhost:5000/api/user/allOrder', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       if (response.data.status) {
-        setRekening(response.data.rekening);
-        setHasMore(false); // Karena kita mengambil semua data sekaligus
+        setOrders(response.data.orderUser);
       }
     } catch (error) {
-      console.error('Error fetching rekening:', error);
+      console.error('Error fetching orders:', error);
     }
   };
 
@@ -67,110 +50,180 @@ const PaymentToCustomer = () => {
     fetchOrders();
   }, []);
 
-  const toggleModal = () => {
-    setModal(!modal);
-  };
-
-  const openModal = (orderId) => {
+  const handleOrderChange = (e) => {
+    const orderId = parseInt(e.target.value, 10);
     setSelectedOrderId(orderId);
-    toggleModal();
+    const order = orders.find(order => order.orderId === orderId);
+    setSelectedOrder(order);
   };
 
-  const updateStatusPayment = async (status) => {
+  const validateForm = () => {
+    if (!totalPembayaran || !buktiPembayaran || !tanggalPembayaran) {
+      setErrorMessage('Semua form wajib diisi !');
+      setShowErrorModal(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/user/updateStatusPayment/${selectedOrderId}`, {
-        statusPayment: status
-      }, {
+      const formData = new FormData();
+      formData.append('userId', selectedOrder.userId);
+      formData.append('orderId', selectedOrder.orderId);
+      formData.append('nama_umkm', selectedOrder.nama_umkm);
+      formData.append('email', selectedOrder.email);
+      formData.append('namaProduk', selectedOrder.namaProduk);
+      formData.append('totalPembayaran', totalPembayaran.replace(/\./g, '')); // Menghapus titik sebelum mengirim
+      formData.append('tanggalPembayaran', tanggalPembayaran);
+      formData.append('buktiPembayaran', buktiPembayaran);
+
+      const response = await axios.post('http://localhost:5000/api/user/payment', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       });
-      // Update the order status locally
-      setOrders(orders.map(order =>
-        order.orderId === selectedOrderId ? { ...order, statusPayment: status } : order
-      ));
-      toggleModal(); // Close the modal
+
+      if (response.data.status) {
+        setShowSuccessModal(true); // Menampilkan modal ketika berhasil
+        resetForm();
+      } else {
+        alert('Gagal menambahkan Pembayaran');
+      }
     } catch (error) {
-      console.error('Error updating status payment:', error);
+      console.error('Error submitting Pembayaran:', error);
+      alert('Terjadi kesalahan saat menambahkan Pembayaran');
     }
   };
 
-  const getRandomAvatar = () => {
-    return avatars[Math.floor(Math.random() * avatars.length)];
+  const resetForm = () => {
+    setSelectedOrderId(null);
+    setSelectedOrder(null);
+    setTotalPembayaran('');
+    setBuktiPembayaran(null);
+    setTanggalPembayaran('');
+    setErrorMessage('');
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+  };
+
+  const handleCloseErrorModal = () => {
+    setShowErrorModal(false);
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value.replace(/\D/g, ''); // Hanya angka
+    const formattedValue = new Intl.NumberFormat('id-ID').format(value); // Format ke id-ID
+    setTotalPembayaran(formattedValue);
+  };
+
+  const handleFileChange = (e) => {
+    setBuktiPembayaran(e.target.files[0]);
   };
 
   return (
-    <>
-      <CRow>
-        <CCol xs>
-          <CCard className="mb-4">
-            <CCardHeader>Payment To Customer</CCardHeader>
-            <CCardBody>
-              <CInputGroup className="mb-3">
-                <CInputGroupText as="label" htmlFor="inputGroupSelect01">Order Id</CInputGroupText>
-                <CFormSelect id="inputGroupSelect01">
-                  <option>Pilih...</option>
-                  <option value="1">One</option>
-                  <option value="2">Two</option>
-                  <option value="3">Three</option>
-                </CFormSelect>
-              </CInputGroup>
+    <CRow>
+      <CCol xs>
+        <CCard className="mb-4">
+          <CCardHeader>Input Pembayaran</CCardHeader>
+          <CCardBody>
+            <CInputGroup className="mb-3">
+              <CInputGroupText as="label" htmlFor="orderSelect">Order Id</CInputGroupText>
+              <CFormSelect id="orderSelect" onChange={handleOrderChange} value={selectedOrderId || ''}>
+                <option value="">Pilih...</option>
+                {orders.map(order => (
+                  <option key={order.orderId} value={order.orderId}>{order.orderId}</option>
+                ))}
+              </CFormSelect>
+            </CInputGroup>
 
-              <CInputGroup className="mb-3">
-                <CInputGroupText as="label" htmlFor="inputGroupSelect01">Nama UMKM</CInputGroupText>
-                <CFormSelect id="inputGroupSelect01">
-                  <option>Pilih...</option>
-                  <option value="1">One</option>
-                  <option value="2">Two</option>
-                  <option value="3">Three</option>
-                </CFormSelect>
-              </CInputGroup>
+            {selectedOrder && (
+              <>
+                <CInputGroup className="mb-3">
+                  <CInputGroupText>Nama UMKM</CInputGroupText>
+                  <CFormInput value={selectedOrder.nama_umkm} readOnly />
+                </CInputGroup>
 
-              <CInputGroup className="mb-3">
-                <CInputGroupText as="label" htmlFor="inputGroupSelect01">Email</CInputGroupText>
-                <CFormSelect id="inputGroupSelect01">
-                  <option>Pilih...</option>
-                  <option value="1">One</option>
-                  <option value="2">Two</option>
-                  <option value="3">Three</option>
-                </CFormSelect>
-              </CInputGroup>
+                <CInputGroup className="mb-3">
+                  <CInputGroupText>Email</CInputGroupText>
+                  <CFormInput value={selectedOrder.email} readOnly />
+                </CInputGroup>
 
+                <CInputGroup className="mb-3">
+                  <CInputGroupText>Nama Produk</CInputGroupText>
+                  <CFormInput value={selectedOrder.namaProduk} readOnly />
+                </CInputGroup>
 
-              <CFormLabel htmlFor="total-payment">Total Pembayaran</CFormLabel>
-              <CInputGroup className="mb-3">
-                <CInputGroupText>Rp</CInputGroupText>
-                <CFormInput
-                  id="total-payment"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  aria-label="Amount (to the nearest dollar)"
-                  value={value}
-                  onChange={handleInputChange}
-                />
-              </CInputGroup>
+                <CFormLabel htmlFor="total-payment">Total Pembayaran</CFormLabel>
+                <CInputGroup className="mb-3">
+                  <CInputGroupText>Rp</CInputGroupText>
+                  <CFormInput
+                    id="total-payment"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    aria-label="Amount (to the nearest dollar)"
+                    value={totalPembayaran}
+                    onChange={handleInputChange}
+                  />
+                </CInputGroup>
 
-              <div className="mb-3">
-                <CFormLabel htmlFor="formFile">Bukti Pembayaran</CFormLabel>
-                <CFormInput type="file" id="formFile" />
-              </div>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="formFile">Bukti Pembayaran</CFormLabel>
+                  <CFormInput type="file" id="formFile" onChange={handleFileChange} />
+                </div>
 
-              <CFormLabel htmlFor="payment-date">Tanggal Pembayaran</CFormLabel>
-              <CInputGroup className="mb-3">
-                <CFormInput type="date" id="payment-date" />
-              </CInputGroup>
+                <CFormLabel htmlFor="payment-date">Tanggal Pembayaran</CFormLabel>
+                <CInputGroup className="mb-3">
+                  <CFormInput
+                    type="date"
+                    id="payment-date"
+                    value={tanggalPembayaran}
+                    onChange={(e) => setTanggalPembayaran(e.target.value)}
+                  />
+                </CInputGroup>
 
-              <div className="d-grid gap-2">
-                <CButton color="primary">Submit</CButton>
-              </div>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-    </>
+                <div className="d-grid gap-2">
+                  <CButton color="primary" onClick={handleSubmit}>Submit</CButton>
+                </div>
+              </>
+            )}
+          </CCardBody>
+        </CCard>
+      </CCol>
+
+      <CModal visible={showSuccessModal} onClose={handleCloseSuccessModal}>
+        <CModalHeader>
+          <CModalTitle>Success</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          Pembayaran berhasil ditambahkan!
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={handleCloseSuccessModal}>Close</CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal visible={showErrorModal} onClose={handleCloseErrorModal}>
+        <CModalHeader>
+          <CModalTitle>Error</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {errorMessage}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={handleCloseErrorModal}>Close</CButton>
+        </CModalFooter>
+      </CModal>
+    </CRow>
   );
-}
+};
 
 export default PaymentToCustomer;
-

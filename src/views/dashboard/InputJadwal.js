@@ -1,142 +1,213 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import InfiniteScroll from 'react-infinite-scroll-component';
-import { CInputGroup, CInputGroupText, CFormInput, CFormLabel, CButton, CRow, CCol, CCard, CCardHeader, CCardBody, CFormSelect } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilPeople } from '@coreui/icons';
-
-const avatars = [
-  'src/assets/images/avatars/Asset_1.svg',
-  'src/assets/images/avatars/Asset_2.svg',
-  'src/assets/images/avatars/Asset_3.svg',
-  'src/assets/images/avatars/Asset_4.svg',
-  'src/assets/images/avatars/Asset_5.svg',
-  'src/assets/images/avatars/Asset_6.svg',
-  'src/assets/images/avatars/Asset_7.svg',
-  'src/assets/images/avatars/Asset_8.svg',
-  'src/assets/images/avatars/Asset_9.svg',
-  'src/assets/images/avatars/Asset_10.svg',
-  'src/assets/images/avatars/Asset_11.svg',
-  'src/assets/images/avatars/Asset_12.svg',
-  'src/assets/images/avatars/Asset_13.svg',
-  'src/assets/images/avatars/Asset_14.svg',
-  'src/assets/images/avatars/Asset_15.svg',
-  'src/assets/images/avatars/Asset_16.svg',
-  'src/assets/images/avatars/Asset_17.svg',
-  'src/assets/images/avatars/Asset_18.svg',
-  'src/assets/images/avatars/Asset_19.svg',
-  'src/assets/images/avatars/Asset_20.svg',
-  'src/assets/images/avatars/Asset_21.svg',
-];
+import { 
+  CInputGroup, 
+  CInputGroupText, 
+  CFormInput, 
+  CFormLabel, 
+  CButton, 
+  CRow, 
+  CCol, 
+  CCard, 
+  CCardHeader, 
+  CCardBody, 
+  CFormSelect,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter
+} from '@coreui/react';
 
 const InputJadwal = () => {
-  const [rekening, setRekening] = useState([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [modal, setModal] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState(null);
-  const [value, setValue] = useState('');
+    const [orders, setOrders] = useState([]);
+    const [selectedOrderId, setSelectedOrderId] = useState(null);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [namaHostLive, setNamaHostLive] = useState('');
+    const [tanggalLive, setTanggalLive] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
-  const formatNumber = (num) => {
-    return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  };
-
-  const handleInputChange = (e) => {
-    const rawValue = e.target.value.replace(/\D/g, '');
-    const formattedValue = formatNumber(rawValue);
-    setValue(formattedValue);
-  };
-
-  const fetchOrders = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://192.168.1.3:5000/api/user/getAllRekening', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const fetchOrders = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:5000/api/user/allOrder', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.data.status) {
+                setOrders(response.data.orderUser);
+            }
+        } catch (error) {
+            console.error('Error fetching orders:', error);
         }
-      });
-      if (response.data.status) {
-        setRekening(response.data.rekening);
-        setHasMore(false); // Karena kita mengambil semua data sekaligus
-      }
-    } catch (error) {
-      console.error('Error fetching rekening:', error);
-    }
-  };
+    };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+    useEffect(() => {
+        fetchOrders();
+    }, []);
 
-  const toggleModal = () => {
-    setModal(!modal);
-  };
+    const handleOrderChange = (e) => {
+        const orderId = parseInt(e.target.value, 10);
+        setSelectedOrderId(orderId);
+        const order = orders.find(order => order.orderId === orderId);
+        setSelectedOrder(order);
+    };
 
-  const openModal = (orderId) => {
-    setSelectedOrderId(orderId);
-    toggleModal();
-  };
-
-  const updateStatusPayment = async (status) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/user/updateStatusPayment/${selectedOrderId}`, {
-        statusPayment: status
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const validateForm = () => {
+        if (!namaHostLive || !tanggalLive) {
+            setErrorMessage('Semua form wajib diisi !');
+            setShowErrorModal(true);
+            return false;
         }
-      });
-      // Update the order status locally
-      setOrders(orders.map(order =>
-        order.orderId === selectedOrderId ? { ...order, statusPayment: status } : order
-      ));
-      toggleModal(); // Close the modal
-    } catch (error) {
-      console.error('Error updating status payment:', error);
-    }
-  };
+        return true;
+    };
 
-  const getRandomAvatar = () => {
-    return avatars[Math.floor(Math.random() * avatars.length)];
-  };
+    const handleSubmit = async () => {
+        if (!validateForm()) {
+            return;
+        }
+        
+        try {
+            const token = localStorage.getItem('token');
+            const data = {
+                userId: selectedOrder.userId,
+                orderId: selectedOrder.orderId,
+                nama_umkm: selectedOrder.nama_umkm,
+                email: selectedOrder.email,
+                namaProduk: selectedOrder.namaProduk,
+                namaHostLive: namaHostLive,
+                tanggalLive: tanggalLive,
+            };
 
-  return (
-    <>
-      <CRow>
-        <CCol xs>
-          <CCard className="mb-4">
-            <CCardHeader>Input Jadwal</CCardHeader>
-            <CCardBody>
-              <CInputGroup className="mb-3">
-                <CInputGroupText as="label" htmlFor="inputGroupSelect01">Order Id</CInputGroupText>
-                <CFormSelect id="inputGroupSelect01">
-                  <option>Pilih...</option>
-                  <option value="1">One</option>
-                  <option value="2">Two</option>
-                  <option value="3">Three</option>
-                </CFormSelect>
-              </CInputGroup>
+            const response = await axios.post('http://localhost:5000/api/admin/jadwal', data, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
 
-              <CInputGroup className="mb-3">
-                <CInputGroupText id="basic-addon1">Nama Host Live</CInputGroupText>
-                <CFormInput placeholder="John Connor" aria-label="Username" aria-describedby="basic-addon1" />
-              </CInputGroup>
+            if (response.data.status) {
+                setShowSuccessModal(true); // Menampilkan modal ketika berhasil
+                resetForm();
+            } else {
+                alert('Gagal menambahkan Jadwal');
+            }
+        } catch (error) {
+            console.error('Error submitting Jadwal:', error);
+            alert('Terjadi kesalahan saat menambahkan Jadwal');
+        }
+    };
 
-              <CFormLabel htmlFor="payment-date">Tanggal Live</CFormLabel>
-              <CInputGroup className="mb-3">
-                <CFormInput type="date" id="payment-date" />
-              </CInputGroup>
+    const resetForm = () => {
+        setSelectedOrderId(null);
+        setSelectedOrder(null);
+        setNamaHostLive('');
+        setTanggalLive('');
+        setErrorMessage('');
+    };
 
-              <div className="d-grid gap-2">
-                <CButton color="primary">Submit</CButton>
-              </div>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-    </>
-  );
-}
+    const handleCloseSuccessModal = () => {
+        setShowSuccessModal(false);
+    };
+
+    const handleCloseErrorModal = () => {
+        setShowErrorModal(false);
+    };
+
+    const handleInputChange = (e) => {
+        const value = e.target.value.replace(/\D/g, ''); // Hanya angka
+        const formattedValue = new Intl.NumberFormat('id-ID').format(value); // Format ke id-ID
+        setTotalPendapatan(formattedValue);
+    };
+
+    return (
+        <CRow>
+            <CCol xs>
+                <CCard className="mb-4">
+                    <CCardHeader>Input Jadwal</CCardHeader>
+                    <CCardBody>
+                        <CInputGroup className="mb-3">
+                            <CInputGroupText as="label" htmlFor="orderSelect">Order Id</CInputGroupText>
+                            <CFormSelect id="orderSelect" onChange={handleOrderChange} value={selectedOrderId || ''}>
+                                <option value="">Pilih...</option>
+                                {orders.map(order => (
+                                    <option key={order.orderId} value={order.orderId}>{order.orderId}</option>
+                                ))}
+                            </CFormSelect>
+                        </CInputGroup>
+
+                        {selectedOrder && (
+                            <>
+                                <CInputGroup className="mb-3">
+                                    <CInputGroupText>Nama UMKM</CInputGroupText>
+                                    <CFormInput value={selectedOrder.nama_umkm} readOnly />
+                                </CInputGroup>
+
+                                <CInputGroup className="mb-3">
+                                    <CInputGroupText>Email</CInputGroupText>
+                                    <CFormInput value={selectedOrder.email} readOnly />
+                                </CInputGroup>
+
+                                <CInputGroup className="mb-3">
+                                    <CInputGroupText>Nama Produk</CInputGroupText>
+                                    <CFormInput value={selectedOrder.namaProduk} readOnly />
+                                </CInputGroup>
+
+                                <CInputGroup className="mb-3">
+                                    <CInputGroupText>Nama Host Live Streaming</CInputGroupText>
+                                    <CFormInput 
+                                        value={namaHostLive} 
+                                        onChange={(e) => setNamaHostLive(e.target.value)} 
+                                    />
+                                </CInputGroup>
+
+
+                                <CFormLabel htmlFor="payment-date">Tanggal Live</CFormLabel>
+                                <CInputGroup className="mb-3">
+                                    <CFormInput 
+                                        type="date" 
+                                        id="payment-date" 
+                                        value={tanggalLive} 
+                                        onChange={(e) => setTanggalLive(e.target.value)}
+                                    />
+                                </CInputGroup>
+
+                                <div className="d-grid gap-2">
+                                    <CButton color="primary" onClick={handleSubmit}>Submit</CButton>
+                                </div>
+                            </>
+                        )}
+                    </CCardBody>
+                </CCard>
+            </CCol>
+
+            <CModal visible={showSuccessModal} onClose={handleCloseSuccessModal}>
+                <CModalHeader>
+                    <CModalTitle>Success</CModalTitle>
+                </CModalHeader>
+                <CModalBody>
+                    Jadwal Live berhasil ditambahkan!
+                </CModalBody>
+                <CModalFooter>
+                    <CButton color="secondary" onClick={handleCloseSuccessModal}>Close</CButton>
+                </CModalFooter>
+            </CModal>
+
+            <CModal visible={showErrorModal} onClose={handleCloseErrorModal}>
+                <CModalHeader>
+                    <CModalTitle>Error</CModalTitle>
+                </CModalHeader>
+                <CModalBody>
+                    {errorMessage}
+                </CModalBody>
+                <CModalFooter>
+                    <CButton color="secondary" onClick={handleCloseErrorModal}>Close</CButton>
+                </CModalFooter>
+            </CModal>
+        </CRow>
+    );
+};
 
 export default InputJadwal;
-

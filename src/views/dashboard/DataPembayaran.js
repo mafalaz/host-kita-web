@@ -5,50 +5,26 @@ import { CRow, CCol, CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRo
 import CIcon from '@coreui/icons-react';
 import { cilPeople } from '@coreui/icons';
 
-const avatars = [
-  'src/assets/images/avatars/Asset_1.svg',
-  'src/assets/images/avatars/Asset_2.svg',
-  'src/assets/images/avatars/Asset_3.svg',
-  'src/assets/images/avatars/Asset_4.svg',
-  'src/assets/images/avatars/Asset_5.svg',
-  'src/assets/images/avatars/Asset_6.svg',
-  'src/assets/images/avatars/Asset_7.svg',
-  'src/assets/images/avatars/Asset_8.svg',
-  'src/assets/images/avatars/Asset_9.svg',
-  'src/assets/images/avatars/Asset_10.svg',
-  'src/assets/images/avatars/Asset_11.svg',
-  'src/assets/images/avatars/Asset_12.svg',
-  'src/assets/images/avatars/Asset_13.svg',
-  'src/assets/images/avatars/Asset_14.svg',
-  'src/assets/images/avatars/Asset_15.svg',
-  'src/assets/images/avatars/Asset_16.svg',
-  'src/assets/images/avatars/Asset_17.svg',
-  'src/assets/images/avatars/Asset_18.svg',
-  'src/assets/images/avatars/Asset_19.svg',
-  'src/assets/images/avatars/Asset_20.svg',
-  'src/assets/images/avatars/Asset_21.svg',
-];
-
 const DataPembayaran = () => {
-  const [rekening, setRekening] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [modal, setModal] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://192.168.1.3:5000/api/user/getAllRekening', {
+      const response = await axios.get('http://192.168.1.3:5000/api/admin/getAllPayment', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       if (response.data.status) {
-        setRekening(response.data.rekening);
+        setPayments(response.data.listPayment);
         setHasMore(false); // Karena kita mengambil semua data sekaligus
       }
     } catch (error) {
-      console.error('Error fetching rekening:', error);
+      console.error('Error fetching orders:', error);
     }
   };
 
@@ -60,35 +36,20 @@ const DataPembayaran = () => {
     setModal(!modal);
   };
 
-  const openModal = (orderId) => {
-    setSelectedOrderId(orderId);
+  const openModal = (imageUrl) => {
+    setSelectedImage(imageUrl);
     toggleModal();
   };
 
-  const updateStatusPayment = async (status) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/user/updateStatusPayment/${selectedOrderId}`, {
-        statusPayment: status
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      // Update the order status locally
-      setOrders(orders.map(order => 
-        order.orderId === selectedOrderId ? { ...order, statusPayment: status } : order
-      ));
-      toggleModal(); // Close the modal
-    } catch (error) {
-      console.error('Error updating status payment:', error);
-    }
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    return new Date(dateString).toLocaleDateString('id-ID', options);
   };
+  
 
-  const getRandomAvatar = () => {
-    return avatars[Math.floor(Math.random() * avatars.length)];
+  const formatCurrency = (value) => {
+    return `Rp ${new Intl.NumberFormat('id-ID').format(value)}`;
   };
-
   return (
     <>
       <CRow>
@@ -110,17 +71,29 @@ const DataPembayaran = () => {
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {rekening.map((rekeningUser, index) => (
+                  {payments.map((payment, index) => (
                     <CTableRow key={index}>
-                      
-                      <CTableDataCell className="text-center">1</CTableDataCell>
-                      <CTableDataCell className="text-center">2</CTableDataCell>
-                      <CTableDataCell className="text-center">Toko Mainan Syahrul</CTableDataCell>
-                      <CTableDataCell className="text-center">syahrul@gmail.com</CTableDataCell>
-                      <CTableDataCell className="text-center">Mainan Robot</CTableDataCell>
-                      <CTableDataCell className="text-center">Rp 155.000</CTableDataCell>
-                      <CTableDataCell className="text-center"><CAvatar size="md" src={'https://img.ws.mms.shopee.co.id/ec8177b2139f0c48f2c07e2470f22341'} /></CTableDataCell>
-                      <CTableDataCell className="text-center">7/27/2024</CTableDataCell>
+                      <CTableDataCell className="text-center">{payment.paymentCustomerId}</CTableDataCell>
+                      <CTableDataCell className="text-center">{payment.orderId}</CTableDataCell>
+                      <CTableDataCell className="text-center">{payment.nama_umkm}</CTableDataCell>
+                      <CTableDataCell className="text-center">{payment.email}</CTableDataCell>
+                      <CTableDataCell className="text-center">{payment.namaProduk}</CTableDataCell>
+                      <CTableDataCell className="text-center">{formatCurrency(payment.totalPembayaran)}</CTableDataCell>
+                      <CTableDataCell className="text-center">
+                        <img
+                          src={payment.buktiPembayaran}
+                          alt="Bukti Pembayaran"
+                          onClick={() => openModal(payment.buktiPembayaran)}
+                          style={{
+                            cursor: 'pointer',
+                            width: '50px', // Ukuran kotak persegi
+                            height: '50px', // Ukuran kotak persegi
+                            objectFit: 'cover', // Crop gambar
+                            borderRadius: '8px' // Membuat sudut kotak persegi
+                          }}
+                        />
+                      </CTableDataCell>
+                      <CTableDataCell className="text-center">{formatDate(payment.tanggalPembayaran)}</CTableDataCell>
                     </CTableRow>
                   ))}
                 </CTableBody>
@@ -131,15 +104,11 @@ const DataPembayaran = () => {
       </CRow>
 
       <CModal visible={modal} onClose={() => setModal(false)}>
-        <CModalHeader>
-          <CModalTitle>Update Status Payment</CModalTitle>
+        <CModalHeader onClose={() => setModal(false)}>
+          <CModalTitle>Bukti Pembayaran</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          <p>Silahkan pilih status pembayaran:</p>
-          <div>
-            <CButton color="success" onClick={() => { updateStatusPayment('Sukses'); toggleModal(); }} style={{ marginRight: '10px', color:'white' }}>Sukses</CButton>
-            <CButton color="danger" onClick={() => { updateStatusPayment('Pending'); toggleModal(); }} style={{ color: 'white'}}>Pending</CButton>
-          </div>
+          {selectedImage && <img src={selectedImage} alt="Bukti Pembayaran" style={{ width: '100%' }} />}
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setModal(false)}>Close</CButton>
@@ -147,7 +116,6 @@ const DataPembayaran = () => {
       </CModal>
     </>
   );
-}
+};
 
 export default DataPembayaran;
-
