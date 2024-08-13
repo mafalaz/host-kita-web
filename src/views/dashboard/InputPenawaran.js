@@ -4,7 +4,6 @@ import {
   CInputGroup, 
   CInputGroupText, 
   CFormInput, 
-  CFormLabel, 
   CButton, 
   CRow, 
   CCol, 
@@ -16,17 +15,17 @@ import {
   CModalHeader,
   CModalTitle,
   CModalBody,
-  CModalFooter
+  CModalFooter,
+  CFormTextarea
 } from '@coreui/react';
 
-const InputPenjualan = () => {
+const InputPenawaran = () => {
     const [orders, setOrders] = useState([]);
     const [selectedOrderId, setSelectedOrderId] = useState(null);
     const [selectedOrder, setSelectedOrder] = useState(null);
-    const [sisaProduk, setSisaProduk] = useState('');
-    const [totalCheckout, setTotalCheckout] = useState('');
-    const [totalPendapatan, setTotalPendapatan] = useState('');
-    const [tanggalUpdatePenjualan, setTanggalUpdatePenjualan] = useState('');
+    const [sisaStokProduk, setSisaStokProduk] = useState('');
+    const [keterangan, setKeterangan] = useState('');
+    const [statusPenawaran, setStatusPenawaran] = useState('Diajukan');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -41,9 +40,13 @@ const InputPenjualan = () => {
             });
             if (response.data.status) {
                 setOrders(response.data.orderUser);
+            } else {
+                throw new Error('Failed to fetch orders');
             }
         } catch (error) {
             console.error('Error fetching orders:', error);
+            setErrorMessage('Gagal mengambil data pesanan. Silakan coba lagi nanti.');
+            setShowErrorModal(true);
         }
     };
 
@@ -55,12 +58,12 @@ const InputPenjualan = () => {
         const orderId = parseInt(e.target.value, 10);
         setSelectedOrderId(orderId);
         const order = orders.find(order => order.orderId === orderId);
-        setSelectedOrder(order);
+        setSelectedOrder(order || null);
     };
 
     const validateForm = () => {
-        if (!sisaProduk || !totalCheckout || !totalPendapatan || !tanggalUpdatePenjualan) {
-            setErrorMessage('Semua form wajib diisi !');
+        if (!selectedOrderId || !sisaStokProduk || !keterangan) {
+            setErrorMessage('Semua form wajib diisi!');
             setShowErrorModal(true);
             return false;
         }
@@ -80,39 +83,36 @@ const InputPenjualan = () => {
                 nama_umkm: selectedOrder.nama_umkm,
                 email: selectedOrder.email,
                 namaProduk: selectedOrder.namaProduk,
-                hargaProduk: selectedOrder.hargaProduk,
-                jumlahProduk: selectedOrder.jumlahProduk,
-                sisaProduk: sisaProduk.replace(/\./g, ''),
-                totalCheckout: totalCheckout.replace(/\./g, ''),
-                totalPendapatan: totalPendapatan.replace(/\./g, ''), // Menghapus titik sebelum mengirim
-                tanggalUpdatePenjualan: tanggalUpdatePenjualan
+                sisaStokProduk: sisaStokProduk.replace(/\./g, ''), // Hapus format sebelum mengirim ke server
+                keterangan: keterangan,
+                statusPenawaran: statusPenawaran,
             };
 
-            const response = await axios.post('http://localhost:5000/api/admin/penjualan', data, {
+            const response = await axios.post('http://localhost:5000/api/admin/penawaran', data, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
             if (response.data.status) {
-                setShowSuccessModal(true); // Menampilkan modal ketika berhasil
+                setShowSuccessModal(true); 
                 resetForm();
             } else {
-                alert('Gagal menambahkan penjualan');
+                setErrorMessage('Gagal menambahkan penawaran. Silakan coba lagi.');
+                setShowErrorModal(true);
             }
         } catch (error) {
-            console.error('Error submitting penjualan:', error);
-            alert('Terjadi kesalahan saat menambahkan penjualan');
+            console.error('Error submitting penawaran:', error);
+            setErrorMessage('Terjadi kesalahan saat menambahkan penawaran. Silakan coba lagi.');
+            setShowErrorModal(true);
         }
     };
 
     const resetForm = () => {
         setSelectedOrderId(null);
         setSelectedOrder(null);
-        setSisaProduk('');
-        setTotalCheckout('');
-        setTotalPendapatan('');
-        setTanggalUpdatePenjualan('');
+        setSisaStokProduk('');
+        setKeterangan('');
         setErrorMessage('');
     };
 
@@ -127,26 +127,14 @@ const InputPenjualan = () => {
     const handleInputChange = (e) => {
         const value = e.target.value.replace(/\D/g, ''); // Hanya angka
         const formattedValue = new Intl.NumberFormat('id-ID').format(value); // Format ke id-ID
-        setTotalPendapatan(formattedValue)
-    };
-
-    const handleInputChangeSisaProduk = (e) => {
-        const value = e.target.value.replace(/\D/g, ''); // Hanya angka
-        const formattedValue = new Intl.NumberFormat('id-ID').format(value); // Format ke id-ID
-        setSisaProduk(formattedValue)
-    };
-
-    const handleInputChangeCheckout = (e) => {
-        const value = e.target.value.replace(/\D/g, ''); // Hanya angka
-        const formattedValue = new Intl.NumberFormat('id-ID').format(value); // Format ke id-ID
-        setTotalCheckout(formattedValue)
+        setSisaStokProduk(formattedValue);
     };
 
     return (
         <CRow>
             <CCol xs>
                 <CCard className="mb-4">
-                    <CCardHeader>Input Penjualan</CCardHeader>
+                    <CCardHeader>Input Penawaran</CCardHeader>
                     <CCardBody>
                         <CInputGroup className="mb-3">
                             <CInputGroupText as="label" htmlFor="orderSelect">Order Id</CInputGroupText>
@@ -176,51 +164,31 @@ const InputPenjualan = () => {
                                 </CInputGroup>
 
                                 <CInputGroup className="mb-3">
-                                    <CInputGroupText>Harga Produk</CInputGroupText>
-                                    <CFormInput value={selectedOrder.hargaProduk} readOnly />
-                                </CInputGroup>
-
-                                <CInputGroup className="mb-3">
-                                    <CInputGroupText>Jumlah Produk</CInputGroupText>
-                                    <CFormInput value={selectedOrder.jumlahProduk} readOnly />
-                                </CInputGroup>
-
-                                <CInputGroup className="mb-3">
-                                    <CInputGroupText>Sisa Produk</CInputGroupText>
+                                    <CInputGroupText>Sisa Stok Produk</CInputGroupText>
                                     <CFormInput 
-                                        value={sisaProduk} 
-                                        onChange={handleInputChangeSisaProduk} 
-                                    />
-                                </CInputGroup>
-
-                                <CInputGroup className="mb-3">
-                                    <CInputGroupText>Total Checkout</CInputGroupText>
-                                    <CFormInput 
-                                        value={totalCheckout} 
-                                        onChange={handleInputChangeCheckout} 
-                                    />
-                                </CInputGroup>
-
-                                <CFormLabel htmlFor="total-payment">Total Pendapatan</CFormLabel>
-                                <CInputGroup className="mb-3">
-                                    <CInputGroupText>Rp</CInputGroupText>
-                                    <CFormInput
-                                        id="total-payment"
-                                        inputMode="numeric"
-                                        pattern="[0-9]*"
-                                        aria-label="Amount (to the nearest dollar)"
-                                        value={totalPendapatan}
+                                        value={sisaStokProduk} 
                                         onChange={handleInputChange}
+                                        inputMode="numeric"
+                                        pattern="[0-9]*" 
+                                        aria-label="Amount (to the nearest dollar)"
                                     />
                                 </CInputGroup>
 
-                                <CFormLabel htmlFor="payment-date">Tanggal Update Penjualan</CFormLabel>
                                 <CInputGroup className="mb-3">
+                                    <CInputGroupText>Keterangan</CInputGroupText>
+                                    <CFormTextarea 
+                                        value={keterangan} 
+                                        onChange={(e) => setKeterangan(e.target.value)} 
+                                        rows={5}
+                                    />
+                                </CInputGroup>
+
+                                <CInputGroup className="mb-3">
+                                    <CInputGroupText>Status Penawaran</CInputGroupText>
                                     <CFormInput 
-                                        type="date" 
-                                        id="payment-date" 
-                                        value={tanggalUpdatePenjualan} 
-                                        onChange={(e) => setTanggalUpdatePenjualan(e.target.value)}
+                                        value={statusPenawaran} 
+                                        
+                                        readOnly
                                     />
                                 </CInputGroup>
 
@@ -238,7 +206,7 @@ const InputPenjualan = () => {
                     <CModalTitle>Success</CModalTitle>
                 </CModalHeader>
                 <CModalBody>
-                    Penjualan berhasil ditambahkan!
+                    Penawaran berhasil ditambahkan!
                 </CModalBody>
                 <CModalFooter>
                     <CButton color="secondary" onClick={handleCloseSuccessModal}>Close</CButton>
@@ -260,4 +228,4 @@ const InputPenjualan = () => {
     );
 };
 
-export default InputPenjualan;
+export default InputPenawaran;

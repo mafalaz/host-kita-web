@@ -45,7 +45,7 @@ const AppHeader = () => {
 
     // Fetch nama Admin from API using Axios
     const token = localStorage.getItem('token') // Ambil token dari local storage
-    axios.get('http://192.168.1.3:5000/api/admin/nameAdmin', { // Ganti dengan endpoint API yang sesuai
+    axios.get('http://localhost:5000/api/admin/nameAdmin', { // Ganti dengan endpoint API yang sesuai
       headers: {
         Authorization: `Bearer ${token}`, // Tambahkan token ke header
       },

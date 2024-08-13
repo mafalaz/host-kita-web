@@ -11,6 +11,7 @@ import {
   cilDescription,
   cilDollar,
   cilDrop,
+  cilHandshake,
   cilNotes,
   cilPenAlt,
   cilPencil,
@@ -70,6 +71,12 @@ const _nav = [
     name: 'Penjualan',
     to: '/penjualan',
     icon: <CIcon icon={cilDollar} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Input Penawaran',
+    to: '/input-penawaran',
+    icon: <CIcon icon={cilHandshake} customClassName="nav-icon" />,
   },
   
 ]

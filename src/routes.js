@@ -9,6 +9,7 @@ const InputJadwal = React.lazy(() => import('./views/dashboard/InputJadwal'))
 const JadwalHostLive = React.lazy(() => import('./views/dashboard/JadwalHostLive'))
 const InputPenjualan = React.lazy(() => import('./views/dashboard/InputPenjualan'))
 const Penjualan = React.lazy(() => import('./views/dashboard/Penjualan'))
+const InputPenawaran = React.lazy(() => import('./views/dashboard/InputPenawaran'))
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
@@ -70,6 +71,7 @@ const routes = [
   { path: '/jadwal-host-live', name: 'Jadwal Host Live', element: JadwalHostLive },
   { path: '/input-penjualan', name: 'Input Penjualan', element: InputPenjualan },
   { path: '/penjualan', name: 'Penjualan', element: Penjualan },
+  { path: '/input-penawaran', name: 'Input Penawaran', element: InputPenawaran },
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
   { path: '/theme/typography', name: 'Typography', element: Typography },

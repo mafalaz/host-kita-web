@@ -12,13 +12,17 @@ const avatars = [
 const Dashboard = () => {
   const [orders, setOrders] = useState([]);
   const [hasMore, setHasMore] = useState(true);
-  const [modal, setModal] = useState(false);
+  const [modalBukti, setModalBukti] = useState(false);
+  const [modalStatus, setModalStatus] = useState(false);
+  const [modalFotoProduk, setModalFotoProduk] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedFotoProduk, setSelectedFotoProduk] = useState(null);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
 
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://192.168.1.3:5000/api/user/allOrder', {
+      const response = await axios.get('http://localhost:5000/api/user/allOrder', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -36,13 +40,31 @@ const Dashboard = () => {
     fetchOrders();
   }, []);
 
-  const toggleModal = () => {
-    setModal(!modal);
+  const toggleModalBukti = () => {
+    setModalBukti(!modalBukti);
   };
 
-  const openModal = (imageUrl) => {
+  const toggleModalStatus = () => {
+    setModalStatus(!modalStatus);
+  };
+
+  const toggleModalFotoProduk = () => {
+    setModalFotoProduk(!modalFotoProduk);
+  };
+
+  const openModalStatus = (orderId) => {
+    setSelectedOrderId(orderId);
+    toggleModalStatus();
+  };
+
+  const openModalBukti = (imageUrl) => {
     setSelectedImage(imageUrl);
-    toggleModal();
+    toggleModalBukti();
+  };
+
+  const openModalFotoProduk = (imageUrl) => {
+    setSelectedFotoProduk(imageUrl);
+    toggleModalFotoProduk();
   };
 
   const updateStatusPayment = async (status) => {
@@ -59,7 +81,7 @@ const Dashboard = () => {
       setOrders(orders.map(order => 
         order.orderId === selectedOrderId ? { ...order, statusPayment: status } : order
       ));
-      toggleModal(); // Close the modal
+      toggleModalStatus(); // Close the modal
     } catch (error) {
       console.error('Error updating status payment:', error);
     }
@@ -67,6 +89,10 @@ const Dashboard = () => {
 
   const getRandomAvatar = () => {
     return avatars[Math.floor(Math.random() * avatars.length)];
+  };
+
+  const formatCurrency = (value) => {
+    return `Rp ${new Intl.NumberFormat('id-ID').format(value)}`;
   };
 
   return (
@@ -86,6 +112,7 @@ const Dashboard = () => {
                     <CTableHeaderCell className="bg-body-tertiary text-center">UMKM</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Email</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Produk</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary text-center">Foto Produk</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Jumlah Produk</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Tanggal Live</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Total Pembayaran</CTableHeaderCell>
@@ -113,14 +140,28 @@ const Dashboard = () => {
                       <CTableDataCell className="text-center">{order.nama_umkm}</CTableDataCell>
                       <CTableDataCell className="text-center">{order.email}</CTableDataCell>
                       <CTableDataCell className="text-center">{order.namaProduk}</CTableDataCell>
+                      <CTableDataCell className="text-center">
+                        <img
+                          src={order.fotoProduk}
+                          alt="Foto Produk"
+                          onClick={() => openModalFotoProduk(order.fotoProduk)}
+                          style={{
+                            cursor: 'pointer',
+                            width: '50px', // Ukuran kotak persegi
+                            height: '50px', // Ukuran kotak persegi
+                            objectFit: 'cover', // Crop gambar
+                            borderRadius: '8px' // Membuat sudut kotak persegi
+                          }}
+                        />
+                      </CTableDataCell>
                       <CTableDataCell className="text-center">{order.jumlahProduk} pcs</CTableDataCell>
                       <CTableDataCell className="text-center">{new Date(order.tanggalLive).toLocaleDateString()}</CTableDataCell>
-                      <CTableDataCell className="text-center">{order.totalPayment}</CTableDataCell>
+                      <CTableDataCell className="text-center">{formatCurrency(order.totalPayment)}</CTableDataCell>
                       <CTableDataCell className="text-center">
                         <img
                           src={order.buktiTransfer}
                           alt="Bukti Pembayaran"
-                          onClick={() => openModal(order.buktiTransfer)}
+                          onClick={() => openModalBukti(order.buktiTransfer)}
                           style={{
                             cursor: 'pointer',
                             width: '50px', // Ukuran kotak persegi
@@ -132,7 +173,13 @@ const Dashboard = () => {
                       </CTableDataCell>
                       <CTableDataCell className="text-center">{order.statusPayment}</CTableDataCell>
                       <CTableDataCell className="text-center">
-                        <CButton color="primary" onClick={() => openModal(order.buktiTransfer)}>Cek Bukti</CButton>
+                        <CButton
+                          color={order.statusPayment === 'Sukses' ? 'dark' : 'primary'}
+                          onClick={() => openModalStatus(order.orderId)}
+                          disabled={order.statusPayment === 'Sukses'}
+                        >
+                          Cek Payment
+                        </CButton>
                       </CTableDataCell>
                     </CTableRow>
                   ))}
@@ -143,15 +190,45 @@ const Dashboard = () => {
         </CCol>
       </CRow>
 
-      <CModal visible={modal} onClose={toggleModal}>
-        <CModalHeader onClose={toggleModal}>
+      <CModal visible={modalBukti} onClose={() => setModalBukti(false)}>
+        <CModalHeader onClose={toggleModalBukti}>
           <CModalTitle>Bukti Pembayaran</CModalTitle>
         </CModalHeader>
         <CModalBody>
           {selectedImage && <img src={selectedImage} alt="Bukti Pembayaran" style={{ width: '100%' }} />}
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={toggleModal}>Close</CButton>
+          <CButton color="secondary" onClick={toggleModalBukti}>Close</CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal visible={modalStatus} onClose={() => setModalStatus(false)}>
+        <CModalHeader>
+          <CModalTitle>Update Status Payment</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <p>Silahkan pilih status pembayaran:</p>
+          <p style={{color:"red"}}>Note:</p>
+          <p style={{color:"red"}}>Pastikan Anda sudah cek bukti pembayaran dengan benar. Jika tidak, maka status pembayaran tidak bisa diubah lagi!</p>
+          <div>
+            <CButton color="success" onClick={() => { updateStatusPayment('Sukses'); }} style={{ marginRight: '10px', color:'white' }}>Sukses</CButton>
+            <CButton color="danger" onClick={() => { updateStatusPayment('Pending'); }} style={{ color: 'white'}}>Pending</CButton>
+          </div>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setModalStatus(false)}>Close</CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal visible={modalFotoProduk} onClose={() => setModalFotoProduk(false)}>
+        <CModalHeader onClose={toggleModalFotoProduk}>
+          <CModalTitle>Foto Produk</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {selectedFotoProduk && <img src={selectedFotoProduk} alt="Foto Produk" style={{ width: '100%' }} />}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={toggleModalFotoProduk}>Close</CButton>
         </CModalFooter>
       </CModal>
     </>

@@ -1,48 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { 
-  CRow, 
-  CCol, 
-  CCard, 
-  CCardHeader, 
-  CCardBody, 
-  CTable, 
-  CTableHead, 
-  CTableRow, 
-  CTableHeaderCell, 
-  CTableBody, 
-  CTableDataCell, 
-  CModal, 
-  CModalHeader, 
-  CModalTitle, 
-  CModalBody, 
-  CModalFooter 
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCol,
+  CFormSelect,
+  CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CInputGroup,
+  CInputGroupText
 } from '@coreui/react';
 
 const Penjualan = () => {
   const [penjualan, setPenjualan] = useState([]);
-  const [hasMore, setHasMore] = useState(true);
+  const [selectedNamaUmkm, setSelectedNamaUmkm] = useState(null);
 
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get('http://localhost:5000/api/admin/allPenjualan', {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (response.data.status) {
         setPenjualan(response.data.listPenjualan);
-        setHasMore(false); // Karena kita mengambil semua data sekaligus
       }
     } catch (error) {
-      console.error('Error fetching rekening:', error);
+      console.error('Error fetching penjualan:', error);
     }
   };
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  const handleOrderChange = (event) => {
+    setSelectedNamaUmkm(event.target.value);
+  };
 
   const formatCurrency = (value) => {
     return `Rp ${new Intl.NumberFormat('id-ID').format(value)}`;
@@ -53,6 +54,9 @@ const Penjualan = () => {
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
+  // Mengumpulkan nama UMKM yang unik
+  const uniqueNamaUmkm = [...new Set(penjualan.map((order) => order.nama_umkm))];
+
   return (
     <>
       <CRow>
@@ -60,6 +64,18 @@ const Penjualan = () => {
           <CCard className="mb-4">
             <CCardHeader>Data Penjualan</CCardHeader>
             <CCardBody>
+            <CInputGroup className="mb-3">
+              <CInputGroupText as="label" htmlFor="orderSelect">Nama UMKM</CInputGroupText>
+              <CFormSelect id="penjualanSelect" onChange={handleOrderChange} value={selectedNamaUmkm || ''}>
+                <option value="">Pilih...</option>
+                {uniqueNamaUmkm.map((namaUmkm) => (
+                  <option key={namaUmkm} value={namaUmkm}>
+                    {namaUmkm}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CInputGroup>
+              <p></p>
               <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead className="text-nowrap">
                   <CTableRow>
@@ -76,20 +92,22 @@ const Penjualan = () => {
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {penjualan.map((penjualanUser, index) => (
-                    <CTableRow key={index}>
-                      <CTableDataCell className="text-center">{penjualanUser.penjualanId}</CTableDataCell>
-                      <CTableDataCell className="text-center">{penjualanUser.nama_umkm}</CTableDataCell>
-                      <CTableDataCell className="text-center">{penjualanUser.email}</CTableDataCell>
-                      <CTableDataCell className="text-center">{penjualanUser.namaProduk}</CTableDataCell>
-                      <CTableDataCell className="text-center">{formatCurrency(penjualanUser.hargaProduk)}</CTableDataCell>
-                      <CTableDataCell className="text-center">{penjualanUser.jumlahProduk}</CTableDataCell>
-                      <CTableDataCell className="text-center">{penjualanUser.sisaProduk}</CTableDataCell>
-                      <CTableDataCell className="text-center">{penjualanUser.totalCheckout}</CTableDataCell>
-                      <CTableDataCell className="text-center">{formatCurrency(penjualanUser.totalPendapatan)}</CTableDataCell>
-                      <CTableDataCell className="text-center">{formatDate(penjualanUser.tanggalUpdatePenjualan)}</CTableDataCell>
-                    </CTableRow>
-                  ))}
+                  {penjualan
+                    .filter((penjualanUser) => !selectedNamaUmkm || penjualanUser.nama_umkm === selectedNamaUmkm)
+                    .map((penjualanUser, index) => (
+                      <CTableRow key={index}>
+                        <CTableDataCell className="text-center">{penjualanUser.penjualanId}</CTableDataCell>
+                        <CTableDataCell className="text-center">{penjualanUser.nama_umkm}</CTableDataCell>
+                        <CTableDataCell className="text-center">{penjualanUser.email}</CTableDataCell>
+                        <CTableDataCell className="text-center">{penjualanUser.namaProduk}</CTableDataCell>
+                        <CTableDataCell className="text-center">{formatCurrency(penjualanUser.hargaProduk)}</CTableDataCell>
+                        <CTableDataCell className="text-center">{penjualanUser.jumlahProduk} Pcs</CTableDataCell>
+                        <CTableDataCell className="text-center">{penjualanUser.sisaProduk} Pcs</CTableDataCell>
+                        <CTableDataCell className="text-center">{penjualanUser.totalCheckout}</CTableDataCell>
+                        <CTableDataCell className="text-center">{formatCurrency(penjualanUser.totalPendapatan)}</CTableDataCell>
+                        <CTableDataCell className="text-center">{formatDate(penjualanUser.tanggalUpdatePenjualan)}</CTableDataCell>
+                      </CTableRow>
+                    ))}
                 </CTableBody>
               </CTable>
             </CCardBody>
@@ -98,6 +116,6 @@ const Penjualan = () => {
       </CRow>
     </>
   );
-}
+};
 
 export default Penjualan;

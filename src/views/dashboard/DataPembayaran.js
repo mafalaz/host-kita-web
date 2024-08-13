@@ -14,7 +14,7 @@ const DataPembayaran = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://192.168.1.3:5000/api/admin/getAllPayment', {
+      const response = await axios.get('http://localhost:5000/api/admin/getAllPayment', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

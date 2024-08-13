@@ -4,31 +4,6 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import { CRow, CCol, CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell, CAvatar, CButton, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPeople } from '@coreui/icons';
-
-const avatars = [
-  'src/assets/images/avatars/Asset_1.svg',
-  'src/assets/images/avatars/Asset_2.svg',
-  'src/assets/images/avatars/Asset_3.svg',
-  'src/assets/images/avatars/Asset_4.svg',
-  'src/assets/images/avatars/Asset_5.svg',
-  'src/assets/images/avatars/Asset_6.svg',
-  'src/assets/images/avatars/Asset_7.svg',
-  'src/assets/images/avatars/Asset_8.svg',
-  'src/assets/images/avatars/Asset_9.svg',
-  'src/assets/images/avatars/Asset_10.svg',
-  'src/assets/images/avatars/Asset_11.svg',
-  'src/assets/images/avatars/Asset_12.svg',
-  'src/assets/images/avatars/Asset_13.svg',
-  'src/assets/images/avatars/Asset_14.svg',
-  'src/assets/images/avatars/Asset_15.svg',
-  'src/assets/images/avatars/Asset_16.svg',
-  'src/assets/images/avatars/Asset_17.svg',
-  'src/assets/images/avatars/Asset_18.svg',
-  'src/assets/images/avatars/Asset_19.svg',
-  'src/assets/images/avatars/Asset_20.svg',
-  'src/assets/images/avatars/Asset_21.svg',
-];
-
 const Rekening = () => {
   const [rekening, setRekening] = useState([]);
   const [hasMore, setHasMore] = useState(true);
@@ -38,7 +13,7 @@ const Rekening = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://192.168.1.3:5000/api/user/getAllRekening', {
+      const response = await axios.get('http://localhost:5000/api/user/getAllRekening', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -85,8 +60,9 @@ const Rekening = () => {
     }
   };
 
-  const getRandomAvatar = () => {
-    return avatars[Math.floor(Math.random() * avatars.length)];
+  const handleSubmit = (noTelepon) => {
+    const waLink = `https://wa.me/${noTelepon}`;
+    window.open(waLink, '_blank');
   };
 
   return (
@@ -108,7 +84,7 @@ const Rekening = () => {
                     <CTableHeaderCell className="bg-body-tertiary text-center">Nomor Rekening</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Nama Bank</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">Atas Nama</CTableHeaderCell>
-                    
+                    <CTableHeaderCell className="bg-body-tertiary text-center">Nomor Whatsapp</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
@@ -123,7 +99,7 @@ const Rekening = () => {
                       <CTableDataCell className="text-center">{rekeningUser.noRekening}</CTableDataCell>
                       <CTableDataCell className="text-center">{rekeningUser.namaBank}</CTableDataCell>
                       <CTableDataCell className="text-center">{rekeningUser.atasNama}</CTableDataCell>
-                      
+                      <CTableDataCell className="text-center"><CButton color="primary" onClick={() => handleSubmit(rekeningUser.noTelepon)}>{rekeningUser.noTelepon}</CButton></CTableDataCell>
                     </CTableRow>
                   ))}
                 </CTableBody>
